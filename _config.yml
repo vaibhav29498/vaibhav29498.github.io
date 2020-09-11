@@ -72,7 +72,7 @@ naver_site_verification  :
 twitter:
   username               :
 facebook:
-  username               : JainVaibhav007
+  username               : JainVaibhav07
   app_id                 :
   publisher              :
 og_image                 : # Open Graph/Twitter default site image
@@ -110,7 +110,7 @@ author:
       url: "https://www.kaggle.com/vaibhav29498"
     - label: "Facebook"
       icon: "fab fa-fw fa-facebook-square"
-      url: "https://facebook.com/JainVaibhav007"
+      url: "https://facebook.com/JainVaibhav07"
     - label: "Instagram"
       icon: "fab fa-fw fa-instagram"
       url: "https://instagram.com/vaibhav29498"
