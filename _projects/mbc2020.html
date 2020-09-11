@@ -1,0 +1,70 @@
+---
+title: "Mouse Behavior Challenge"
+excerpt: "Using deep learning to predict if a mouse suffers from Parkinson"
+header:
+  teaser: assets/images/mbc.gif
+classes: wide
+---
+<div style="font-size: 0.8em; font-family: monospace; text-align: justify;">
+<h2>Introduction</h2>
+<p>
+The <a href="https://competitions.codalab.org/competitions/22266">2020 Mouse Behavior Challenge</a> was organized on Codalab by a Japanese research group called <a href="http://navi-science.jp/english/">Systems Science of Bio-Navigation</a>. The task is to predict if a mouse suffers from Parkinson's disease or not, and the only data we are given is the trajectory of the mouse in open space.
+<br>
+<br>
+The mouse was kept in a box surrounded by black walls. The coordinates of its nose, point between its ears, and the root of its tail, were recorded with a 30 observations per second using a software called <a href="http://www.mousemotorlab.org/deeplabcut">DeepLabCut</a>.
+</p>
+
+<img src="/assets/images/mbc.gif" style="display: block; margin-left: auto; margin-right: auto;" />
+
+<p>
+The training set consisted of trajectories of 10 mouses, with an equal number of normal and PD mouses. All trajectories were recorded for 15 minutes, which means that each training sample had 15 * 60 * 30 = 27,000 timesteps. However, the test set had 1539 trajectories and each was recorded for only 4-8 seconds (120-240 timesteps). This huge difference in the number of timesteps in the training and test samples was the first problem to solve in this challenge. I tried various approaches to extract smaller subsequences out of the training samples, and finally went with a brute force approach of extracting every possible contiguous sequence of length 120-240. This led to a training set of 3,24,53,410 samples. Since the sequences were overlapping, it was clear that overfitting is going to be a major problem is the resulting model.
+<br>
+<br>
+Another point to remember is the difference in the distribution of the training and test set. The test set is preprocssed with the following two steps:
+<ol>
+<li>translating every sequence such that their tip of the nose in the first timestep is at point (0, 0).
+<li>rotating the sequence around the origin by a random angle.
+</ol>
+Running these two steps while generating the training batches resulted in a major improvement in the results.
+</p>
+
+<h2>The Model</h2>
+<p>
+I experimented with various sequential models while working on this project. My final model looks like this:
+
+{% highlight text %}
+Model: "model"
+_________________________________________________________________
+Layer                        Output Shape              Param #   
+=================================================================
+InputLayer                   [(None, None, 6)]         0         
+_________________________________________________________________
+Conv1D                       (None, None, 32)          1952      
+(kernel size: 10,
+no. of filters: 32)
+_________________________________________________________________
+biGRU                        (None, None, 128)         37632     
+_________________________________________________________________
+biGRU                        (None, 8)                 6624      
+_________________________________________________________________
+Output                       (None, 1)                 9         
+=================================================================
+Total params: 46,217
+_________________________________________________________________
+{% endhighlight %}
+
+An important point to note is that the vectors returned by the first and second bi-GRU models were obtained through concatenation and summation respectively. I used the rmsprop optimizer to train this model as it performed much better than Adam or Adagrad.
+<br>
+<br>
+This model reached 95% accuracy in just 5 epochs. However, the test accuracy was 71%. I was expecting overfitting due to the overlapping nature of the training set. However, no regulariation technique such as l2-penalties or dropout fixed this issue.
+<br>
+<br>
+You can have a look at the code I wrote for this project on <a href="https://github.com/vaibhav29498/MBC2020/blob/master/MBC2020.ipynb">Github</a>.
+</p>
+
+<h2>Conclusion & Future work</h2>
+This model was placed first in the challenge. I was supposed to present my work at the 2020 Symposium on Systems Science of Bio-Navigation in Nagoya, Japan. But fate had other plans as this symposium got cancelled due to the COVID-19 pandemic. While working on this project, I was curious to know if human researchers are capable of differentiating between normal and PD mouses. Doshisha University's Prof. Susumu Takahashi, who prepared the dataset for this contest, was kind enough to answer my questions. Although researchers are not able to manually distinguish between the mouses, past studies have shown a statistical difference between their ambulation and immobility periods.
+<br>
+<br>
+I plan to use explainable ML techniques to figure out the behaviorial patterns that this model is looking at. That should greatly improve our understanding about the Parkinson's disease in mouse models.
+</div>
